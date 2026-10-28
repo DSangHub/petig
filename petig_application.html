@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetIG.app - Pet Intelligence & Owner Grades (Petigree)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for High Grades -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c',
+                            700: '#c2410c',
+                        },
+                        petblue: {
+                            500: '#0284c7',
+                            600: '#0369a1',
+                        },
+                        petpurple: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 40%, #e0f2fe 100%);
+        }
+        .laser-target {
+            box-shadow: 0 0 20px #ef4444, 0 0 40px #ef4444;
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-800 bg-slate-50 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('landing')">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                    <i class="fa-solid fa-paw text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-black text-slate-900 tracking-tight">Pet<span class="text-brand-500">IG</span><span class="text-xs font-semibold px-1.5 py-0.5 ml-1 bg-brand-100 text-brand-700 rounded-full">.app</span></span>
+                    <p class="text-[10px] text-slate-400 font-bold -mt-1 hidden sm:block">Pet Intelligence Grades & Affiliates</p>
+                </div>
+            </div>
+
+            <!-- Global Species Filter Badges (Nav Bar) -->
+            <div class="hidden lg:flex items-center space-x-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold">
+                <button onclick="setSpecies('all')" id="species-btn-all" class="species-btn px-3 py-1.5 rounded-xl bg-white text-slate-900 shadow-sm transition-all">All Pets 🐾</button>
+                <button onclick="setSpecies('dog')" id="species-btn-dog" class="species-btn px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all">Dogs 🐶</button>
+                <button onclick="setSpecies('cat')" id="species-btn-cat" class="species-btn px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all">Cats 🐱</button>
+                <button onclick="setSpecies('bird')" id="species-btn-bird" class="species-btn px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all">Birds 🦜</button>
+            </div>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center space-x-1">
+                <button onclick="switchTab('landing')" id="nav-landing" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all text-brand-600 bg-brand-50">Home</button>
+                <button onclick="switchTab('quiz')" id="nav-quiz" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">Quizzes</button>
+                <button onclick="switchTab('toys')" id="nav-toys" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">Affiliate Toys</button>
+                <button onclick="switchTab('games')" id="nav-games" class="nav-btn px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all">Pet Games</button>
+            </nav>
+
+            <div class="flex items-center space-x-2">
+                <button onclick="openQuiz('petig')" class="px-4 py-2 bg-gradient-to-r from-brand-500 to-amber-500 hover:from-brand-600 hover:to-amber-600 text-white rounded-xl text-xs font-black shadow-lg shadow-brand-500/25 transition-all transform active:scale-95 flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>Get Petigree</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden flex border-t border-slate-100 bg-white px-2 py-1 justify-around text-xs font-semibold">
+            <button onclick="switchTab('landing')" id="mnav-landing" class="mobile-nav-btn flex-1 py-1.5 text-center text-brand-600 flex flex-col items-center"><i class="fa-solid fa-house text-base"></i><span class="text-[10px]">Home</span></button>
+            <button onclick="switchTab('quiz')" id="mnav-quiz" class="mobile-nav-btn flex-1 py-1.5 text-center text-slate-500 flex flex-col items-center"><i class="fa-solid fa-clipboard-question text-base"></i><span class="text-[10px]">Quizzes</span></button>
+            <button onclick="switchTab('toys')" id="mnav-toys" class="mobile-nav-btn flex-1 py-1.5 text-center text-slate-500 flex flex-col items-center"><i class="fa-solid fa-store text-base"></i><span class="text-[10px]">Toys</span></button>
+            <button onclick="switchTab('games')" id="mnav-games" class="mobile-nav-btn flex-1 py-1.5 text-center text-slate-500 flex flex-col items-center"><i class="fa-solid fa-gamepad text-base"></i><span class="text-[10px]">Games</span></button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow">
+        
+        <!-- Global Species Quick Bar for Mobile & Subpages -->
+        <div class="bg-slate-900 text-white py-2.5 px-4">
+            <div class="max-w-7xl mx-auto flex justify-between items-center text-xs">
+                <span class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-filter text-amber-400"></i> Active Species Filter:</span>
+                <div class="flex gap-2 font-bold">
+                    <button onclick="setSpecies('all')" class="species-chip px-2.5 py-1 rounded-lg bg-brand-500 text-white">All 🐾</button>
+                    <button onclick="setSpecies('dog')" class="species-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">Dogs 🐶</button>
+                    <button onclick="setSpecies('cat')" class="species-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">Cats 🐱</button>
+                    <button onclick="setSpecies('bird')" class="species-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">Birds 🦜</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= LANDING PAGE SECTION ================= -->
+        <section id="tab-landing" class="tab-content transition-opacity duration-300">
+            <!-- Hero Banner -->
+            <div class="gradient-bg py-12 lg:py-20 px-4 sm:px-6 lg:px-8 border-b border-amber-100 relative overflow-hidden">
+                <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 items-center">
+                    <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-brand-200 text-brand-700 text-xs font-bold shadow-sm">
+                            <span class="flex h-2 w-2 rounded-full bg-brand-500 animate-ping"></span>
+                            <span id="hero-species-badge">Official Dog, Cat & Bird Intelligence Testing</span>
+                        </div>
+                        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.12] tracking-tight">
+                            Evaluate Your Pet's True <span class="bg-gradient-to-r from-brand-600 via-amber-500 to-petpurple-600 bg-clip-text text-transparent">Petigree</span>
+                        </h1>
+                        <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
+                            Discover where your dog, cat, or bird ranks in problem-solving, memory, and impulse control. Play in-browser brain games and unlock affiliate-verified smart toys tailored to their grade.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+                            <button onclick="openQuiz('petig')" class="px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-black text-base shadow-xl shadow-brand-500/30 hover:shadow-brand-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3">
+                                <i class="fa-solid fa-brain"></i>
+                                <span>Take PetIG Quiz</span>
+                            </button>
+                            <button onclick="switchTab('games')" class="px-8 py-4 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-2xl font-extrabold text-base shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-gamepad text-petpurple-500"></i>
+                                <span>Play Pet Games</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Hero Card -->
+                    <div class="lg:col-span-5 flex justify-center">
+                        <div class="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 relative">
+                            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                                <div class="flex items-center gap-3">
+                                    <div id="hero-card-icon" class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl shadow-inner">
+                                        🐶
+                                    </div>
+                                    <div>
+                                        <h3 id="hero-card-title" class="text-lg font-black text-slate-800">Barnaby</h3>
+                                        <p id="hero-card-sub" class="text-xs text-slate-400 font-bold">Golden Retriever • Canine Grade</p>
+                                    </div>
+                                </div>
+                                <div class="bg-emerald-100 text-emerald-800 text-[11px] font-black px-3 py-1 rounded-full uppercase">
+                                    Certified
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 py-4">
+                                <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">PetIG Grade</span>
+                                    <span class="text-3xl font-black text-brand-500">A+</span>
+                                    <span class="text-[10px] text-emerald-600 font-bold block">Top 5% Problem Solver</span>
+                                </div>
+                                <div class="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Owner Match</span>
+                                    <span class="text-3xl font-black text-petblue-500">96%</span>
+                                    <span class="text-[10px] text-petblue-600 font-bold block">High Synergy</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 pt-2">
+                                <div class="p-3 bg-brand-50 rounded-xl flex items-center justify-between text-xs font-bold text-brand-800">
+                                    <span><i class="fa-solid fa-puzzle-piece mr-2 text-brand-500"></i> Recommended Toy:</span>
+                                    <a href="#" onclick="switchTab('toys')" class="underline hover:text-brand-600">Level 3 Nina Ottosson</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Hub / Choice Section -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div class="text-center max-w-3xl mx-auto mb-12">
+                    <span class="text-xs font-black uppercase tracking-widest text-brand-600">Testing Suite</span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-1">Select Your Evaluation Quiz</h2>
+                    <p class="text-slate-500 text-sm mt-2">Customized assessments for Dogs, Cats, and Birds.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Quiz Card 1 -->
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl flex flex-col justify-between hover:border-brand-500 transition-all">
+                        <div class="space-y-4">
+                            <div class="w-12 h-12 rounded-2xl bg-brand-100 text-brand-600 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-brain"></i>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900">PetIG Smart Intelligence Test</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                Evaluates species-specific memory, treat retrieval logic, spatial awareness, and vocal recognition for your dog, cat, or bird.
+                            </p>
+                        </div>
+                        <div class="pt-6 border-t border-slate-100 mt-6 flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-400"><i class="fa-regular fa-clock"></i> 3 Minutes • 5 Questions</span>
+                            <button onclick="openQuiz('petig')" class="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-xs shadow-md transition-all">Start PetIG Test</button>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Card 2 -->
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl flex flex-col justify-between hover:border-petblue-500 transition-all">
+                        <div class="space-y-4">
+                            <div class="w-12 h-12 rounded-2xl bg-petblue-500/10 text-petblue-600 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-handshake"></i>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900">OwnerIG Synergy Quiz</h3>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                Measures your daily enrichment efforts, routine schedule consistency, training clarity, and patience level.
+                            </p>
+                        </div>
+                        <div class="pt-6 border-t border-slate-100 mt-6 flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-400"><i class="fa-regular fa-clock"></i> 2 Minutes • 4 Questions</span>
+                            <button onclick="openQuiz('ownerig')" class="px-5 py-2.5 bg-petblue-500 hover:bg-petblue-600 text-white rounded-xl font-bold text-xs shadow-md transition-all">Start OwnerIG Test</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= QUIZ INTERACTIVE SECTION ================= -->
+        <section id="tab-quiz" class="tab-content hidden py-10 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-10">
+                
+                <!-- Quiz Progress Bar -->
+                <div id="quiz-progress-container" class="mb-8">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-400 mb-2">
+                        <span id="quiz-step-text">Question 1 of 5</span>
+                        <span id="quiz-percent-text">20% Completed</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div id="quiz-progress-bar" class="bg-brand-500 h-full rounded-full transition-all duration-300" style="width: 20%"></div>
+                    </div>
+                </div>
+
+                <!-- Questions Dynamic Container -->
+                <div id="quiz-questions-wrapper">
+                    <div id="quiz-dynamic-content" class="space-y-6">
+                        <!-- Questions injected dynamically by JS based on species and quiz type -->
+                    </div>
+
+                    <!-- Quiz Buttons -->
+                    <div class="flex justify-between items-center pt-8 border-t border-slate-100 mt-8">
+                        <button id="quiz-prev-btn" onclick="prevQuizStep()" class="px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-slate-600 disabled:opacity-30 disabled:hover:text-slate-400" disabled>
+                            Back
+                        </button>
+                        <button id="quiz-next-btn" onclick="nextQuizStep()" class="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25 transition-all">
+                            Next Question
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz Result Section -->
+                <div id="quiz-result-wrapper" class="hidden text-center space-y-6">
+                    <div class="inline-flex p-3 rounded-3xl bg-amber-50 border border-amber-100">
+                        <span class="text-4xl">🎓</span>
+                    </div>
+                    <h2 class="text-3xl font-black text-slate-900">Petigree Assessment Generated!</h2>
+                    <p class="text-slate-500 text-sm max-w-md mx-auto">Official certified badge and custom affiliate toy recommendations ready.</p>
+
+                    <!-- Generated Certificate Badge Card -->
+                    <div id="shareable-badge-card" class="max-w-md mx-auto bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white p-6 rounded-3xl shadow-2xl relative border border-slate-700">
+                        <div class="flex justify-between items-start pb-4 border-b border-slate-700">
+                            <div class="text-left">
+                                <span class="text-[10px] font-black tracking-widest text-brand-400 uppercase">PetIG Certified Grade</span>
+                                <h3 id="res-pet-name" class="text-2xl font-black text-white mt-0.5">Barnaby</h3>
+                                <p id="res-pet-type" class="text-xs text-slate-400 font-semibold">Canine Assessment</p>
+                            </div>
+                            <div id="res-grade-badge" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-amber-400 flex items-center justify-center text-3xl font-black text-white shadow-lg">
+                                A+
+                            </div>
+                        </div>
+
+                        <div class="py-4 text-left space-y-3">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-slate-400 font-semibold">Title</span>
+                                <span id="res-title-text" class="font-bold text-amber-300">Tactical Treat Master</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-slate-400 font-semibold">Owner Synergy Match</span>
+                                <span id="res-owner-match" class="font-bold text-emerald-400">94%</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-slate-400 font-semibold">Problem Solving Index</span>
+                                <span id="res-brain-power" class="font-bold text-petblue-400">Very High</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-800/90 rounded-2xl p-3.5 text-left border border-slate-700 text-xs text-slate-300 space-y-1">
+                            <span class="font-bold text-amber-400 block"><i class="fa-solid fa-lightbulb mr-1"></i> Tailored Toy Suggestion:</span>
+                            <p id="res-recommendation">Your pet exhibits high curiosity. Upgrade to Level 3 interactive foraging puzzles.</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                        <button onclick="copyShareText()" class="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            <span>Copy Grade Certificate</span>
+                        </button>
+                        <button onclick="switchTab('toys')" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cart-shopping text-brand-500"></i>
+                            <span>View Recommended Toys</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ================= AFFILIATE STORE / TOYS SECTION ================= -->
+        <section id="tab-toys" class="tab-content hidden py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <div class="text-center max-w-3xl mx-auto mb-10">
+                <span class="text-xs font-black text-brand-600 uppercase tracking-widest">Affiliate Marketplace</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-1">Smart Toys & Enrichment Gear</h2>
+                <p class="text-slate-500 text-sm mt-2">Curated puzzle toys, laser towers, and foraging wheels for Dogs 🐶, Cats 🐱, and Birds 🦜.</p>
+            </div>
+
+            <!-- Level & Category Filters -->
+            <div class="flex flex-wrap justify-center gap-2 mb-10">
+                <button onclick="filterToysByLevel('all')" class="toy-level-btn active px-4 py-2 rounded-full text-xs font-bold bg-slate-900 text-white shadow-md transition-all">All Levels</button>
+                <button onclick="filterToysByLevel('beginner')" class="toy-level-btn px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">Beginner (Level 1)</button>
+                <button onclick="filterToysByLevel('intermediate')" class="toy-level-btn px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">Intermediate (Level 2)</button>
+                <button onclick="filterToysByLevel('mastermind')" class="toy-level-btn px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all">Mastermind (Level 3)</button>
+            </div>
+
+            <!-- Toys Grid -->
+            <div id="toys-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Products injected dynamically based on species and level filters -->
+            </div>
+        </section>
+
+
+        <!-- ================= INTERACTIVE GAMES SECTION ================= -->
+        <section id="tab-games" class="tab-content hidden py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+            <div class="text-center max-w-3xl mx-auto mb-8">
+                <span class="text-xs font-black text-brand-600 uppercase tracking-widest">In-Browser Gym</span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-1">Playable Pet & Owner Games</h2>
+                <p class="text-slate-500 text-sm mt-2">Interactive shell puzzles, laser reflex touch screens, and frequency recall soundboards.</p>
+            </div>
+
+            <!-- Game Mode Nav -->
+            <div class="flex justify-center border-b border-slate-200 mb-8 overflow-x-auto">
+                <button onclick="switchGameMode('shell')" id="gtab-shell" class="px-5 py-3 font-bold text-xs sm:text-sm border-b-2 border-brand-500 text-brand-600 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-cubes"></i> Treat Shell Game
+                </button>
+                <button onclick="switchGameMode('laser')" id="gtab-laser" class="px-5 py-3 font-bold text-xs sm:text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye"></i> Laser & Target Tap
+                </button>
+                <button onclick="switchGameMode('sound')" id="gtab-sound" class="px-5 py-3 font-bold text-xs sm:text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-volume-high"></i> Recall Pitch Trainer
+                </button>
+            </div>
+
+            <!-- GAME 1: TREAT SHELL GAME -->
+            <div id="game-shell-container" class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-xl max-w-2xl mx-auto text-center space-y-6">
+                <div>
+                    <h3 class="font-extrabold text-slate-900 text-lg">Where is the Treat? 🦴</h3>
+                    <p class="text-xs text-slate-400">Watch the treat hide under a cup and track where it shuffles!</p>
+                </div>
+
+                <div class="flex justify-around items-center h-48 bg-slate-50 rounded-2xl p-4 border border-slate-100 relative" id="shell-stage">
+                    <div onclick="pickCup(0)" class="shell-cup cursor-pointer text-6xl transition-transform duration-300 hover:scale-110">
+                        🥤
+                    </div>
+                    <div onclick="pickCup(1)" class="shell-cup cursor-pointer text-6xl transition-transform duration-300 hover:scale-110">
+                        🥤
+                    </div>
+                    <div onclick="pickCup(2)" class="shell-cup cursor-pointer text-6xl transition-transform duration-300 hover:scale-110">
+                        🥤
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center text-xs font-bold text-slate-600 max-w-xs mx-auto">
+                    <span>Streak: <strong id="shell-streak" class="text-brand-500">0</strong></span>
+                    <span id="shell-status-text" class="text-slate-500">Click "Hide Treat" to start</span>
+                </div>
+
+                <button id="shell-start-btn" onclick="startShellGame()" class="px-8 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs rounded-xl shadow-md transition-all">
+                    Hide Treat & Shuffle
+                </button>
+            </div>
+
+            <!-- GAME 2: LASER & REFLEX TAP -->
+            <div id="game-laser-container" class="hidden bg-slate-900 p-6 rounded-3xl shadow-xl max-w-2xl mx-auto text-center space-y-4 text-white">
+                <div class="flex justify-between items-center px-2">
+                    <div class="text-left">
+                        <h3 class="font-extrabold text-white text-base">Touchscreen Target Tap</h3>
+                        <p class="text-[11px] text-slate-400">Let your cat, dog, or bird tap moving targets!</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 font-bold block">Score</span>
+                        <span id="laser-score" class="text-2xl font-black text-amber-400">0</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Arena -->
+                <div id="laser-arena" class="h-72 bg-slate-950 rounded-2xl relative overflow-hidden border border-slate-800 cursor-pointer">
+                    <div id="laser-target" onclick="hitLaserTarget(event)" class="w-10 h-10 rounded-full bg-red-500 laser-target absolute flex items-center justify-center text-lg hidden transition-all duration-150">
+                        🔴
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 text-xs font-bold">
+                    <span id="laser-timer-text" class="text-slate-400">Time: 20s</span>
+                    <button onclick="startLaserGame()" class="px-6 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-md transition-all">
+                        Start Arena
+                    </button>
+                </div>
+            </div>
+
+            <!-- GAME 3: SOUNDBOARD PITCH TRAINER -->
+            <div id="game-sound-container" class="hidden bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-xl max-w-2xl mx-auto space-y-6">
+                <div class="text-center">
+                    <h3 class="font-extrabold text-slate-900 text-lg">Voice & Recall Pitch Soundboard</h3>
+                    <p class="text-xs text-slate-400">Trigger species-tuned sound frequencies to test head turns and focus response.</p>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <button onclick="playPetSound('squeak')" class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold text-xs flex flex-col items-center gap-2 transition-all">
+                        <i class="fa-solid fa-volume-high text-2xl text-amber-500"></i>
+                        <span>High Squeaker (Dog)</span>
+                    </button>
+
+                    <button onclick="playPetSound('purr')" class="p-4 rounded-2xl bg-purple-50 border border-purple-200 text-purple-800 hover:bg-purple-100 font-bold text-xs flex flex-col items-center gap-2 transition-all">
+                        <i class="fa-solid fa-cat text-2xl text-purple-500"></i>
+                        <span>Meow / Chirp (Cat)</span>
+                    </button>
+
+                    <button onclick="playPetSound('whistle')" class="p-4 rounded-2xl bg-sky-50 border border-sky-200 text-sky-800 hover:bg-sky-100 font-bold text-xs flex flex-col items-center gap-2 transition-all">
+                        <i class="fa-solid fa-kiwi-bird text-2xl text-sky-500"></i>
+                        <span>High Chirp (Bird)</span>
+                    </button>
+
+                    <button onclick="playPetSound('clicker')" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold text-xs flex flex-col items-center gap-2 transition-all">
+                        <i class="fa-solid fa-toggle-on text-2xl text-emerald-500"></i>
+                        <span>Training Clicker</span>
+                    </button>
+
+                    <button onclick="playPetSound('bell')" class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 hover:bg-rose-100 font-bold text-xs flex flex-col items-center gap-2 transition-all">
+                        <i class="fa-solid fa-bell text-2xl text-rose-500"></i>
+                        <span>Dinner Bell</span>
+                    </button>
+
+                    <button onclick="playPetSound('rustle')" class="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 font-bold text-xs flex flex-col items-center gap-2 transition-all">
+                        <i class="fa-solid fa-box text-2xl text-slate-500"></i>
+                        <span>Treat Bag Rustle</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-paw text-brand-500 text-lg"></i>
+                <span class="font-bold text-white">PetIG.app</span>
+                <span>© 2026 Pet Intelligence Grades & Affiliate Directory.</span>
+            </div>
+            <div class="flex space-x-6 font-semibold text-[11px]">
+                <a href="#" onclick="switchTab('quiz')" class="hover:text-white transition-colors">Quizzes</a>
+                <a href="#" onclick="switchTab('toys')" class="hover:text-white transition-colors">Affiliate Store</a>
+                <a href="#" onclick="switchTab('games')" class="hover:text-white transition-colors">Games</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl text-xs font-bold flex items-center space-x-3 transition-all transform translate-y-20 opacity-0 z-50">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toast-message">Action successful</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC ENGINE -->
+    <script>
+        // GLOBAL APP STATE
+        let activeSpecies = 'all'; // 'all', 'dog', 'cat', 'bird'
+        let currentQuizType = 'petig'; // 'petig', 'ownerig'
+        let quizAnswers = {};
+        let currentQuizStep = 1;
+        let selectedLevelFilter = 'all';
+
+        // SAMPLE AFFILIATE DATABASE (Dogs, Cats, Birds)
+        const affiliateProducts = [
+            // DOG PRODUCTS
+            {
+                id: 'd1',
+                species: 'dog',
+                level: 'mastermind',
+                title: 'Outward Hound Nina Ottosson Level 3 MultiPuzzle',
+                price: '$27.49',
+                rating: '4.8 ★',
+                image: '🧩',
+                desc: 'Ultimate challenge requiring sliding blocks and spinning wheel locks.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            },
+            {
+                id: 'd2',
+                species: 'dog',
+                level: 'intermediate',
+                title: 'KONG Genius Mike Treat Dispenser',
+                price: '$12.99',
+                rating: '4.6 ★',
+                image: '🦴',
+                desc: 'Interlocking durable rubber toy to foster problem-solving patience.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            },
+            {
+                id: 'd3',
+                species: 'dog',
+                level: 'beginner',
+                title: 'Interactive Snuffle Mat Scent Pad',
+                price: '$16.99',
+                rating: '4.7 ★',
+                image: '🌻',
+                desc: 'Promotes natural foraging instincts and calms fast eaters.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            },
+
+            // CAT PRODUCTS
+            {
+                id: 'c1',
+                species: 'cat',
+                level: 'intermediate',
+                title: 'Catit Senses 2.0 Slinky Circuit Track',
+                price: '$19.99',
+                rating: '4.9 ★',
+                image: '🏎️',
+                desc: 'Peek-a-boo track with motion activated illuminated ball.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            },
+            {
+                id: 'c2',
+                species: 'cat',
+                level: 'mastermind',
+                title: 'Catit Bug Diggin Treat Puzzle',
+                price: '$21.90',
+                rating: '4.7 ★',
+                image: '🐞',
+                desc: 'Requires cats to scoop treats out of hidden burrows.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            },
+            {
+                id: 'c3',
+                species: 'cat',
+                level: 'beginner',
+                title: 'Chirping Feather Automation Wand',
+                price: '$14.99',
+                rating: '4.5 ★',
+                image: '🪶',
+                desc: 'Simulates realistic prey movements and bird chirps upon motion.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            },
+
+            // BIRD PRODUCTS
+            {
+                id: 'b1',
+                species: 'bird',
+                level: 'mastermind',
+                title: 'Acrylic Revolving Foraging Wheel Cabinet',
+                price: '$22.50',
+                rating: '4.8 ★',
+                image: '🎡',
+                desc: 'Parrots must turn the wheel to align compartments for seeds.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            },
+            {
+                id: 'b2',
+                species: 'bird',
+                level: 'intermediate',
+                title: 'Stainless Shredder Bell & Puzzle Cylinder',
+                price: '$15.99',
+                rating: '4.6 ★',
+                image: '🔔',
+                desc: 'Chew-proof puzzle tube with interior bell and treat drawers.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            },
+            {
+                id: 'b3',
+                species: 'bird',
+                level: 'beginner',
+                title: 'Natural Preening Block & Mirror Perch',
+                price: '$11.80',
+                rating: '4.7 ★',
+                image: '🦜',
+                desc: 'Soothes preening urges and provides visual mirror stimulation.',
+                chewyUrl: 'https://www.chewy.com',
+                amazonUrl: 'https://www.amazon.com'
+            }
+        ];
+
+        // QUIZ QUESTION BANK
+        const quizBank = {
+            ownerig: [
+                {
+                    q: "Are you patient with your pet when they make mistakes or take time to learn?",
+                    options: [
+                        { text: "Always—I view mistakes as learning moments and adjust my method.", score: 10 },
+                        { text: "Usually, though I occasionally get frustrated when tired.", score: 7 },
+                        { text: "I try, but repetition tests my limits often.", score: 4 },
+                        { text: "Rarely—I expect them to know better immediately.", score: 2 }
+                    ]
+                },
+                {
+                    q: "Do you spend dedicated time every single day to challenge and improve their intelligence?",
+                    options: [
+                        { text: "Yes, daily 15-30 min puzzle sessions, scent games, or trick training.", score: 10 },
+                        { text: "3-4 times a week when schedule permits.", score: 7 },
+                        { text: "Only weekend sessions or sporadic play.", score: 4 },
+                        { text: "Rarely—they mostly play independently with basic toys.", score: 2 }
+                    ]
+                },
+                {
+                    q: "How accurately do they read and respond to your subtle body language and cues?",
+                    options: [
+                        { text: "Flawlessly—a slight shift in posture or hand gesture guides them.", score: 10 },
+                        { text: "Well in quiet settings, but easily distracted in public.", score: 7 },
+                        { text: "They only respond to loud vocal commands or treats in sight.", score: 4 },
+                        { text: "They mostly ignore body language and vocal cues.", score: 2 }
+                    ]
+                },
+                {
+                    q: "Has living with your pet made YOU a smarter, calmer, and more patient human?",
+                    options: [
+                        { text: "Profoundly—they've taught me emotional discipline, empathy, and focus.", score: 10 },
+                        { text: "Definitely—I've learned to slow down and appreciate small wins.", score: 7 },
+                        { text: "A little bit, though I'm still working on my patience.", score: 4 },
+                        { text: "Not really—it mostly feels like extra daily chores.", score: 2 }
+                    ]
+                }
+            ],
+            dog: [
+                {
+                    q: "When a treat is hidden under a cup or puzzle slider, your dog...",
+                    options: [
+                        { text: "Solves it or flips it in under 10 seconds effortlessly", score: 10 },
+                        { text: "Noses around and figures it out in 1-2 minutes", score: 7 },
+                        { text: "Barks or stares at you to solve it for them", score: 4 },
+                        { text: "Wanders away or loses interest", score: 2 }
+                    ]
+                },
+                {
+                    q: "How fast does your dog learn new commands (e.g., spin, speak)?",
+                    options: [
+                        { text: "Learns in 3-5 reps; remembers months later", score: 10 },
+                        { text: "Takes a few daily sessions with treats", score: 7 },
+                        { text: "Only listens when treat is visibly held", score: 5 },
+                        { text: "Prefers to do their own thing", score: 3 }
+                    ]
+                },
+                {
+                    q: "When you place a treat on the floor and say 'WAIT':",
+                    options: [
+                        { text: "Waits patiently until release word", score: 10 },
+                        { text: "Waits 5 seconds max before snatching", score: 7 },
+                        { text: "Gulp it down instantly", score: 4 }
+                    ]
+                }
+            ],
+            cat: [
+                {
+                    q: "When food or a toy rolls under the couch, your cat...",
+                    options: [
+                        { text: "Paws strategically from multiple angles until retrieved", score: 10 },
+                        { text: "Reaches around for a minute, then calls for help", score: 7 },
+                        { text: "Forgets about it immediately", score: 3 }
+                    ]
+                },
+                {
+                    q: "How does your cat react to treat puzzle toys?",
+                    options: [
+                        { text: "Hooked! Clears all chambers systematically", score: 10 },
+                        { text: "Plays for a bit if treat smells strong", score: 7 },
+                        { text: "Prefers the cardboard box it arrived in", score: 4 }
+                    ]
+                },
+                {
+                    q: "Response to vocal names or distinctive sound triggers:",
+                    options: [
+                        { text: "Ears rotate immediately and trots over", score: 10 },
+                        { text: "Slow ear flick or tail twitch", score: 6 },
+                        { text: "Total stoic ignore", score: 3 }
+                    ]
+                }
+            ],
+            bird: [
+                {
+                    q: "When presented with a closed foraging wheel or box, your bird...",
+                    options: [
+                        { text: "Manipulates latches/wheels methodically until open", score: 10 },
+                        { text: "Chews at outer frame until treats drop", score: 7 },
+                        { text: "Looks confused or squawks at owner", score: 4 }
+                    ]
+                },
+                {
+                    q: "Mirror & vocal mimicry speed:",
+                    options: [
+                        { text: "Picks up new tunes/words within days", score: 10 },
+                        { text: "Repeats whistles after extensive repetition", score: 7 },
+                        { text: "Prefers natural chirps only", score: 5 }
+                    ]
+                },
+                {
+                    q: "Spatial memory and perch navigation:",
+                    options: [
+                        { text: "Flies straight to target treat spots around room", score: 10 },
+                        { text: "Follows owner with gentle guidance", score: 7 },
+                        { text: "Stays on designated cage top only", score: 4 }
+                    ]
+                }
+            ]
+        };
+
+        // SPECIES FILTER SWITCHER
+        function setSpecies(sp) {
+            activeSpecies = sp;
+            
+            // Update nav chips
+            document.querySelectorAll('.species-btn').forEach(btn => {
+                btn.className = 'species-btn px-3 py-1.5 rounded-xl text-slate-600 hover:text-slate-900 transition-all';
+            });
+            const activeBtn = document.getElementById(`species-btn-${sp}`);
+            if (activeBtn) activeBtn.className = 'species-btn px-3 py-1.5 rounded-xl bg-white text-slate-900 shadow-sm transition-all';
+
+            // Update mobile header text
+            const labels = { all: 'All Pets 🐾', dog: 'Dogs 🐶', cat: 'Cats 🐱', bird: 'Birds 🦜' };
+            const heroBadges = {
+                all: 'Official Dog, Cat & Bird Intelligence Testing',
+                dog: 'Canine PetIG & Cognitive Evaluation',
+                cat: 'Feline Agility & Behavioral Scoring',
+                bird: 'Avian Foraging & Recall Grade'
+            };
+            document.getElementById('hero-species-badge').innerText = heroBadges[sp];
+
+            // Re-render Products Grid
+            renderToysGrid();
+            
+            showToast(`Filter set to: ${labels[sp]}`);
+        }
+
+        // RENDER AFFILIATE PRODUCTS
+        function renderToysGrid() {
+            const grid = document.getElementById('toys-grid');
+            grid.innerHTML = '';
+
+            const filtered = affiliateProducts.filter(item => {
+                const matchSpecies = (activeSpecies === 'all' || item.species === activeSpecies);
+                const matchLevel = (selectedLevelFilter === 'all' || item.level === selectedLevelFilter);
+                return matchSpecies && matchLevel;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-400 font-bold">
+                        No affiliate products found matching this filter combo!
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden flex flex-col justify-between hover:-translate-y-1 transition-all';
+                card.innerHTML = `
+                    <div>
+                        <div class="h-44 bg-slate-50 flex items-center justify-center text-6xl relative">
+                            ${p.image}
+                            <span class="absolute top-3 right-3 bg-slate-900 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase">
+                                ${p.level}
+                            </span>
+                        </div>
+                        <div class="p-6 space-y-2">
+                            <div class="flex justify-between items-center text-xs text-slate-400 font-bold">
+                                <span class="uppercase tracking-wider text-brand-600">${p.species} gear</span>
+                                <span><i class="fa-solid fa-star text-amber-400"></i> ${p.rating}</span>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900">${p.title}</h3>
+                            <p class="text-xs text-slate-500 leading-relaxed">${p.desc}</p>
+                        </div>
+                    </div>
+                    <div class="p-6 pt-0 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-black text-slate-900">${p.price}</span>
+                            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">In Stock</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="${p.chewyUrl}" target="_blank" onclick="trackAffiliateClick('${p.title}', 'Chewy')" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-center text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                <span>Chewy</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                            <a href="${p.amazonUrl}" target="_blank" onclick="trackAffiliateClick('${p.title}', 'Amazon')" class="py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-center text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                <span>Amazon</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterToysByLevel(lvl) {
+            selectedLevelFilter = lvl;
+            document.querySelectorAll('.toy-level-btn').forEach(btn => {
+                btn.className = 'toy-level-btn px-4 py-2 rounded-full text-xs font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-all';
+            });
+            event.target.className = 'toy-level-btn active px-4 py-2 rounded-full text-xs font-bold bg-slate-900 text-white shadow-md transition-all';
+            renderToysGrid();
+        }
+
+        function trackAffiliateClick(item, store) {
+            showToast(`Opening ${store} link for ${item}...`);
+        }
+
+        // QUIZ LOGIC
+        function openQuiz(type) {
+            currentQuizType = type;
+            currentQuizStep = 1;
+            quizAnswers = {};
+            switchTab('quiz');
+
+            document.getElementById('quiz-questions-wrapper').classList.remove('hidden');
+            document.getElementById('quiz-progress-container').classList.remove('hidden');
+            document.getElementById('quiz-result-wrapper').classList.add('hidden');
+
+            renderQuizStep();
+        }
+
+        function renderQuizStep() {
+            const container = document.getElementById('quiz-dynamic-content');
+            const spKey = (activeSpecies === 'all') ? 'dog' : activeSpecies;
+            const bank = quizBank[spKey];
+
+            if (currentQuizStep > bank.length) {
+                finishQuiz();
+                return;
+            }
+
+            const qData = bank[currentQuizStep - 1];
+
+            container.innerHTML = `
+                <div>
+                    <span class="text-xs font-black text-brand-600 uppercase tracking-wide">Question ${currentQuizStep} of ${bank.length}</span>
+                    <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">${qData.q}</h3>
+                </div>
+                <div class="space-y-3 pt-2">
+                    ${qData.options.map((opt, idx) => `
+                        <label onclick="selectQuizOpt(this, ${opt.score})" class="quiz-opt-card flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-brand-500 cursor-pointer transition-all">
+                            <span class="font-semibold text-slate-700 text-sm">${opt.text}</span>
+                            <i class="fa-regular fa-circle check-icon text-slate-300 text-xl"></i>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+
+            // Update Progress
+            const pct = (currentQuizStep / bank.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+            document.getElementById('quiz-step-text').innerText = `Question ${currentQuizStep} of ${bank.length}`;
+            document.getElementById('quiz-percent-text').innerText = `${Math.round(pct)}% Completed`;
+
+            document.getElementById('quiz-prev-btn').disabled = (currentQuizStep === 1);
+            document.getElementById('quiz-next-btn').innerText = (currentQuizStep === bank.length) ? 'Calculate Grade' : 'Next Question';
+        }
+
+        function selectQuizOpt(cardEl, score) {
+            document.querySelectorAll('.quiz-opt-card').forEach(c => {
+                c.classList.remove('border-brand-500', 'bg-brand-50/50');
+                c.querySelector('.check-icon').className = 'fa-regular fa-circle check-icon text-slate-300 text-xl';
+            });
+
+            cardEl.classList.add('border-brand-500', 'bg-brand-50/50');
+            cardEl.querySelector('.check-icon').className = 'fa-solid fa-circle-check check-icon text-brand-500 text-xl';
+            
+            quizAnswers[currentQuizStep] = score;
+        }
+
+        function nextQuizStep() {
+            if (!quizAnswers[currentQuizStep]) {
+                showToast('Please select an option to continue!');
+                return;
+            }
+
+            const spKey = (activeSpecies === 'all') ? 'dog' : activeSpecies;
+            if (currentQuizStep < quizBank[spKey].length) {
+                currentQuizStep++;
+                renderQuizStep();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function prevQuizStep() {
+            if (currentQuizStep > 1) {
+                currentQuizStep--;
+                renderQuizStep();
+            }
+        }
+
+        function finishQuiz() {
+            const spKey = (activeSpecies === 'all') ? 'Dog' : activeSpecies.toUpperCase();
+            
+            let total = 0;
+            Object.values(quizAnswers).forEach(val => total += val);
+
+            let grade = 'A+';
+            let title = 'Mastermind Genius';
+            let rec = 'Upgrade to Level 3 multi-stage interactive foraging toys.';
+
+            if (currentQuizType === 'ownerig') {
+                if (total >= 36) {
+                    grade = 'A+';
+                    title = 'Master Mentor & Synergy Lead';
+                    rec = 'Your high patience and daily enrichment create an elite bond! Challenge them with Level 3 multi-stage puzzle toys.';
+                } else if (total >= 28) {
+                    grade = 'A';
+                    title = 'Patient Partner & Conscious Trainer';
+                    rec = 'Great routine! Adding 5-10 minutes of dedicated body-language cue practice daily will unlock even higher synergy.';
+                } else if (total >= 20) {
+                    grade = 'B';
+                    title = 'Loving Companion & Caring Guide';
+                    rec = 'You have strong affection. Increase daily mental stimulation using snuffle mats and interactive treat rollers to build patience together.';
+                } else {
+                    grade = 'C';
+                    title = 'Casual Caregiver';
+                    rec = 'Start simple: 5 minutes of low-stress treat-search games daily will boost mutual patience and communication significantly.';
+                }
+
+                document.getElementById('res-pet-name').innerText = `Owner EQ & Synergy`;
+                document.getElementById('res-pet-type').innerText = `${spKey} Owner Bond Evaluation`;
+                document.getElementById('res-grade-badge').innerText = grade;
+                document.getElementById('res-title-text').innerText = title;
+                document.getElementById('res-owner-match').innerText = `${Math.round((total / 40) * 100)}%`;
+                document.getElementById('res-brain-power').innerText = total >= 28 ? 'High Synergy' : 'Growing Bond';
+                document.getElementById('res-recommendation').innerText = rec;
+            } else {
+                if (total < 18) {
+                    grade = 'C';
+                    title = 'Relaxed Couch Companion';
+                    rec = 'Start with simple lick mats or treat dispensing balls.';
+                } else if (total < 25) {
+                    grade = 'B';
+                    title = 'Curious Explorer';
+                    rec = 'Level 2 slide-and-seek treat boards are perfect!';
+                }
+
+                document.getElementById('res-pet-name').innerText = `${spKey} Assessment`;
+                document.getElementById('res-grade-badge').innerText = grade;
+                document.getElementById('res-title-text').innerText = title;
+                document.getElementById('res-recommendation').innerText = rec;
+            }
+
+            document.getElementById('quiz-questions-wrapper').classList.add('hidden');
+            document.getElementById('quiz-progress-container').classList.add('hidden');
+            document.getElementById('quiz-result-wrapper').classList.remove('hidden');
+
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+            }
+        }
+
+        function renderQuizStep() {
+            const container = document.getElementById('quiz-dynamic-content');
+            let bank = [];
+
+            if (currentQuizType === 'ownerig') {
+                bank = quizBank.ownerig;
+            } else {
+                const spKey = (activeSpecies === 'all') ? 'dog' : activeSpecies;
+                bank = quizBank[spKey];
+            }
+
+            if (currentQuizStep > bank.length) {
+                finishQuiz();
+                return;
+            }
+
+            const qData = bank[currentQuizStep - 1];
+
+            container.innerHTML = `
+                <div>
+                    <span class="text-xs font-black text-brand-600 uppercase tracking-wide">Question ${currentQuizStep} of ${bank.length}</span>
+                    <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">${qData.q}</h3>
+                </div>
+                <div class="space-y-3 pt-2">
+                    ${qData.options.map((opt, idx) => `
+                        <label onclick="selectQuizOpt(this, ${opt.score})" class="quiz-opt-card flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-brand-500 cursor-pointer transition-all">
+                            <span class="font-semibold text-slate-700 text-sm">${opt.text}</span>
+                            <i class="fa-regular fa-circle check-icon text-slate-300 text-xl"></i>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+
+            // Update Progress
+            const pct = (currentQuizStep / bank.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+            document.getElementById('quiz-step-text').innerText = `Question ${currentQuizStep} of ${bank.length}`;
+            document.getElementById('quiz-percent-text').innerText = `${Math.round(pct)}% Completed`;
+
+            document.getElementById('quiz-prev-btn').disabled = (currentQuizStep === 1);
+            document.getElementById('quiz-next-btn').innerText = (currentQuizStep === bank.length) ? 'Calculate Grade' : 'Next Question';
+        }
+
+        function nextQuizStep() {
+            if (!quizAnswers[currentQuizStep]) {
+                showToast('Please select an option to continue!');
+                return;
+            }
+
+            let bankLen = 0;
+            if (currentQuizType === 'ownerig') {
+                bankLen = quizBank.ownerig.length;
+            } else {
+                const spKey = (activeSpecies === 'all') ? 'dog' : activeSpecies;
+                bankLen = quizBank[spKey].length;
+            }
+
+            if (currentQuizStep < bankLen) {
+                currentQuizStep++;
+                renderQuizStep();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function copyShareText() {
+            const text = `🐾 My pet received a certified ${document.getElementById('res-grade-badge').innerText} Grade on PetIG.app! Test your dog, cat, or bird here: https://www.petig.app`;
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+            showToast('Grade certificate copied to clipboard!');
+        }
+
+        // GAME LOGIC (Shell, Laser, Soundboard)
+        function switchGameMode(mode) {
+            ['shell', 'laser', 'sound'].forEach(m => {
+                document.getElementById(`game-${m}-container`).classList.add('hidden');
+                document.getElementById(`gtab-${m}`).className = 'px-5 py-3 font-bold text-xs sm:text-sm border-b-2 border-transparent text-slate-400 hover:text-slate-600 whitespace-nowrap flex items-center gap-2';
+            });
+
+            document.getElementById(`game-${mode}-container`).classList.remove('hidden');
+            document.getElementById(`gtab-${mode}`).className = 'px-5 py-3 font-bold text-xs sm:text-sm border-b-2 border-brand-500 text-brand-600 whitespace-nowrap flex items-center gap-2';
+        }
+
+        // Treat Shell Game
+        let correctCup = 0;
+        let shellStreak = 0;
+        let isShuffling = false;
+
+        function startShellGame() {
+            if (isShuffling) return;
+            isShuffling = true;
+            correctCup = Math.floor(Math.random() * 3);
+
+            const cups = document.querySelectorAll('.shell-cup');
+            document.getElementById('shell-status-text').innerText = 'Shuffling cups...';
+
+            cups.forEach((c, idx) => {
+                c.innerText = (idx === correctCup) ? '🦴' : '🥤';
+            });
+
+            setTimeout(() => {
+                cups.forEach(c => c.innerText = '🥤');
+                document.getElementById('shell-status-text').innerText = 'Pick a cup!';
+                isShuffling = false;
+            }, 1000);
+        }
+
+        function pickCup(index) {
+            if (isShuffling) return;
+            const cups = document.querySelectorAll('.shell-cup');
+            
+            if (index === correctCup) {
+                cups[index].innerText = '🦴';
+                shellStreak++;
+                document.getElementById('shell-streak').innerText = shellStreak;
+                document.getElementById('shell-status-text').innerText = 'Correct! Treat found!';
+                showToast('Great job! Treat found!');
+            } else {
+                cups[index].innerText = '❌';
+                shellStreak = 0;
+                document.getElementById('shell-streak').innerText = '0';
+                document.getElementById('shell-status-text').innerText = 'Empty! Try again.';
+            }
+        }
+
+        // Laser Tap Game
+        let laserScore = 0;
+        let laserTimer = null;
+
+        function startLaserGame() {
+            laserScore = 0;
+            document.getElementById('laser-score').innerText = '0';
+            moveLaserTarget();
+            
+            let timeLeft = 20;
+            document.getElementById('laser-timer-text').innerText = `Time: ${timeLeft}s`;
+
+            clearInterval(laserTimer);
+            laserTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('laser-timer-text').innerText = `Time: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(laserTimer);
+                    document.getElementById('laser-target').classList.add('hidden');
+                    showToast(`Game Over! Target tapped ${laserScore} times!`);
+                } else {
+                    moveLaserTarget();
+                }
+            }, 800);
+        }
+
+        function moveLaserTarget() {
+            const arena = document.getElementById('laser-arena');
+            const target = document.getElementById('laser-target');
+
+            const maxX = arena.clientWidth - 50;
+            const maxY = arena.clientHeight - 50;
+
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+
+            target.style.left = `${randomX}px`;
+            target.style.top = `${randomY}px`;
+            target.classList.remove('hidden');
+        }
+
+        function hitLaserTarget(e) {
+            e.stopPropagation();
+            laserScore++;
+            document.getElementById('laser-score').innerText = laserScore;
+            moveLaserTarget();
+        }
+
+        // Soundboard Generator
+        function playPetSound(type) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'squeak') {
+                osc.frequency.setValueAtTime(1200, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            } else if (type === 'whistle') {
+                osc.frequency.setValueAtTime(2500, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            } else {
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            }
+
+            showToast(`Played ${type} audio trigger!`);
+        }
+
+        // GENERAL UTILS
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'nav-btn px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all';
+            });
+            const activeDesktopNav = document.getElementById(`nav-${tabId}`);
+            if (activeDesktopNav) {
+                activeDesktopNav.className = 'nav-btn px-3.5 py-2 rounded-xl text-xs font-bold transition-all text-brand-600 bg-brand-50';
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        window.onload = function() {
+            renderToysGrid();
+        };
+    </script>
+</body>
+</html>
