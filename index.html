@@ -138,6 +138,7 @@
                             Discover where your dog, cat, or bird ranks in problem-solving, memory, and impulse control. Play in-browser brain games and unlock affiliate-verified smart toys tailored to their grade.
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+                            <a href="#groups" class="px-8 py-4 bg-petpurple-600 text-white rounded-2xl font-extrabold text-center">Create a Profile</a>
                             <button onclick="openQuiz('petig')" class="px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-black text-base shadow-xl shadow-brand-500/30 hover:shadow-brand-500/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3">
                                 <i class="fa-solid fa-brain"></i>
                                 <span>Take PetIG Quiz</span>
@@ -1225,5 +1226,216 @@
             renderToysGrid();
         };
     </script>
+<style>
+#groups h3{font-weight:800;margin-top:1.25rem}
+#groups label{display:block;margin-top:.75rem}
+#groups input,#groups select{display:block;width:100%;padding:.55rem;border:1px solid #94a3b8;border-radius:.5rem}
+#groups button{margin:.7rem .5rem .3rem 0;padding:.55rem .9rem;border-radius:.5rem;background:#6b21a8;color:white;font-weight:700}
+#groups a{color:#6b21a8;text-decoration:underline}
+</style>
+<section id="groups" class="mx-auto my-12 max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-8" aria-labelledby="groupTitle">
+<h2 id="groupTitle" class="text-2xl font-black mb-3">PetIG profiles and groups</h2>
+<p id="groupStatus" role="status"></p>
+<form id="groupAuth">
+<label>Email<input name="email" type="email" required></label>
+<label>Password<input name="password" type="password" minlength="6" required></label>
+<button name="action" value="login">Sign in</button><button name="action" value="signup" class="secondary">Create account</button>
+</form>
+<div id="groupAccount" hidden>
+<button id="groupSignout" class="secondary">Sign out</button>
+<form id="groupProfile">
+<h3>Create or update your profile</h3>
+<label>Username<input name="display_name" maxlength="60" required></label>
+<label>Contest display name<select name="display_name_source"><option value="username">Username</option><option value="pet_name">Pet name</option></select></label>
+<button>Save profile</button>
+</form>
+<div id="groupTools" hidden>
+<form id="groupPet">
+<h3>Add a pet</h3>
+<label>Pet name<input name="name" maxlength="40" required></label>
+<label>Species<select name="species"><option>Dog</option><option>Cat</option></select></label>
+<button>Save pet</button>
+</form>
+<ul id="groupPets"></ul>
+<form id="groupCreate">
+<h3>Create a group contest</h3>
+<label>Contest name<input name="title" maxlength="80" required></label>
+<label>Closing date and time<input name="closes_at" type="datetime-local" required></label>
+<button>Create group</button>
+</form>
+<h3>Your contests</h3><div id="groupContests"></div>
+<h3>Invitations</h3><div id="groupInvites"></div>
+<a id="groupEmail" hidden>Open email draft</a>
+</div>
+</div>
+</section>
+<script>
+(() => {
+  const base = 'https://jrxsbkumbayeyqewstau.supabase.co';
+  const apikey = 'sb_publishable_kREpqnd-3plgW8g4028IpQ_4IBn1ykw';
+  const get = id => document.getElementById(id);
+  const status = get('groupStatus');
+  let session;
+  let busy = false;
+
+  async function request(path, body, prefer) {
+    const headers = { apikey };
+    if (session) headers.Authorization = 'Bearer ' + session.access_token;
+    if (body) headers['Content-Type'] = 'application/json';
+    if (prefer) headers.Prefer = prefer;
+    const response = await fetch(base + path, {
+      method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined
+    });
+    const raw = await response.text();
+    const data = raw ? JSON.parse(raw) : null;
+    if (!response.ok) throw new Error(data?.msg || data?.message || 'Request failed.');
+    return data;
+  }
+  const rows = table => request('/rest/v1/petig_' + table);
+  const save = (table, values, upsert = false) => request('/rest/v1/petig_' + table, values,
+    upsert ? 'resolution=merge-duplicates,return=minimal' : 'return=minimal');
+
+  async function run(action) {
+    if (busy) return;
+    busy = true;
+    status.textContent = 'Working…';
+    try {
+      status.textContent = await action() || '';
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      busy = false;
+    }
+  }
+
+  function form(id, action) {
+    get(id).addEventListener('submit', event => {
+      event.preventDefault();
+      run(() => action(Object.fromEntries(new FormData(event.target)), event.submitter));
+    });
+  }
+
+  function button(label, action) {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.textContent = label;
+    el.addEventListener('click', () => run(action));
+    return el;
+  }
+
+  async function refresh() {
+    const [profile] = await rows('profiles');
+    get('groupTools').hidden = !profile;
+    if (!profile) return;
+    const fields = get('groupProfile').elements;
+    fields.display_name.value = profile.display_name;
+    fields.display_name_source.value = profile.display_name_source;
+    const [pets, contests, invites, memberships] = await Promise.all(
+      ['pets', 'contests', 'invites', 'contest_members'].map(rows)
+    );
+    get('groupPets').replaceChildren(...pets.map(pet => {
+      const item = document.createElement('li');
+      item.textContent = pet.name + ' · ' + pet.species;
+      return item;
+    }));
+    const contestList = get('groupContests');
+    contestList.textContent = contests.length ? '' : 'No contests yet.';
+    for (const contest of contests) {
+      const item = document.createElement('div');
+      const title = document.createElement('p');
+      title.textContent = contest.title + ' · closes ' + new Date(contest.closes_at).toLocaleString();
+      item.append(title);
+      if (contest.host_id === session.user.id && Date.parse(contest.closes_at) > Date.now()) {
+        const invite = document.createElement('form');
+        const label = document.createElement('label');
+        label.textContent = 'Invite a friend by email';
+        const address = document.createElement('input');
+        address.type = 'email';
+        address.required = true;
+        label.append(address);
+        const submit = document.createElement('button');
+        submit.textContent = 'Prepare invitation';
+        invite.append(label, submit);
+        invite.addEventListener('submit', event => {
+          event.preventDefault();
+          run(async () => {
+            const email = address.value.trim().toLowerCase();
+            const existing = invites.find(row => row.email === email && row.contest_id === contest.id);
+            if (existing && Date.parse(existing.expires_at) <= Date.now()) {
+              throw new Error('This invitation expired.');
+            }
+            if (!existing) {
+              const expires_at = new Date(Math.min(Date.parse(contest.closes_at), Date.now() + 6 * 86400000)).toISOString();
+              await save('invites', { contest_id: contest.id, email, expires_at });
+              invites.push({ contest_id: contest.id, email, expires_at });
+            }
+            const link = get('groupEmail');
+            const subject = encodeURIComponent('Join my PetIG contest');
+            const body = encodeURIComponent('Join my PetIG contest! Sign in with this email to accept: ' + location.origin + '/#groups');
+            link.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + subject + '&body=' + body;
+            link.hidden = false;
+            link.focus();
+            return 'Invitation saved. Open the email draft to send it.';
+          });
+        });
+        item.append(invite);
+      }
+      contestList.append(item);
+    }
+    const pending = invites.filter(row => row.email === session.user.email.toLowerCase() &&
+      !memberships.some(member => member.contest_id === row.contest_id) &&
+      !contests.some(contest => contest.id === row.contest_id && contest.host_id === session.user.id));
+    const inbox = get('groupInvites');
+    inbox.textContent = pending.length ? '' : 'No pending invitations.';
+    pending.forEach((invite, index) => inbox.append(button('Accept invitation ' + (index + 1), async () => {
+      await save('contest_members', { contest_id: invite.contest_id });
+      await refresh();
+      return 'You joined the contest.';
+    })));
+  }
+
+  form('groupAuth', async (credentials, submitter) => {
+    const signup = submitter?.value === 'signup';
+    const response = await request('/auth/v1/' + (signup ? 'signup' : 'token?grant_type=password'), credentials);
+    get('groupAuth').elements.password.value = '';
+    if (!response.access_token) return 'Check your email to confirm your account, then return here to sign in.';
+    session = response;
+    get('groupAuth').hidden = true;
+    get('groupAccount').hidden = false;
+    await refresh();
+    return 'Signed in.';
+  });
+  get('groupSignout').addEventListener('click', () => {
+    if (busy) return;
+    session = undefined;
+    get('groupAccount').hidden = true;
+    get('groupTools').hidden = true;
+    get('groupEmail').hidden = true;
+    get('groupProfile').reset();
+    get('groupAuth').hidden = false;
+    status.textContent = 'Signed out.';
+  });
+  form('groupProfile', async values => {
+    await save('profiles', { ...values, user_id: session.user.id }, true);
+    await refresh();
+    return 'Profile saved.';
+  });
+  form('groupPet', async values => {
+    await save('pets', values);
+    get('groupPet').reset();
+    await refresh();
+    return 'Pet saved.';
+  });
+  form('groupCreate', async values => {
+    const closes = new Date(values.closes_at);
+    if (!(closes > new Date())) throw new Error('Choose a closing time in the future.');
+    await save('contests', { title: values.title, closes_at: closes.toISOString() });
+    get('groupCreate').reset();
+    await refresh();
+    return 'Group created.';
+  });
+})();
+
+</script>
 </body>
 </html>
